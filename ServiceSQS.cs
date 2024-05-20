@@ -18,7 +18,8 @@ namespace ReceiverSQSConsole
         public ServiceSQS(IAmazonSQS client)
         {
             this.clientSQS = client;
-            this.UrlQueue = "https://sqs.us-east-1.amazonaws.com/637423451273/queue-lunes-apj";
+            //this.UrlQueue = "https://sqs.us-east-1.amazonaws.com/637423451273/queue-lunes-apj";
+            this.UrlQueue = "https://sqs.us-east-1.amazonaws.com/637423451273/queue-lunes-fifo-apj.fifo";
         }
 
         public async Task<List<Mensaje>>
@@ -52,6 +53,7 @@ namespace ReceiverSQSConsole
                         string json = msj.Body;
                         Mensaje data =
                             JsonConvert.DeserializeObject<Mensaje>(json);
+                        data.ReceiptHandle = msj.ReceiptHandle;
                         output.Add(data);
                     }
                     return output;
@@ -66,6 +68,18 @@ namespace ReceiverSQSConsole
                 return null;
             }
 
+        }
+
+        public async Task DeleteMessageAsync(string receiptHandle)
+        {
+            DeleteMessageRequest request = new DeleteMessageRequest
+            {
+                QueueUrl = this.UrlQueue,
+                ReceiptHandle = receiptHandle
+            };
+            DeleteMessageResponse response =
+                await this.clientSQS.DeleteMessageAsync(request);
+            HttpStatusCode statusCode = response.HttpStatusCode;
         }
     }
 }
